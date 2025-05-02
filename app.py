@@ -20,7 +20,7 @@ if not key:
 metadata = pd.read_feather("features_metadata.feather")
 metadata= metadata.reset_index(drop= True)
 
-from handler import Preprocessor, Fetcher
+from lib.handler import Preprocessor, Fetcher
 # Connect to Pinecone
 fetcher= Fetcher()
 index = fetcher.connect(key)
@@ -29,7 +29,7 @@ commbined_string = fetcher.init_combined_song_string(metadata,["track_name", "ar
 # Instantiate preprocessor object
 prep= Preprocessor()
 
-from recommend import Recommend
+from lib.recommend import Recommend
 rc= Recommend()
 # Load model weights
 model= rc.init_model("best_model.pth")
