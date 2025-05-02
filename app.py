@@ -122,7 +122,7 @@ def rec():
     if not data.get("ids"):
         return jsonify({"error": "Playlist IDs are required"}), 400
     
-    app.logger.info(f'Recieved playlst {data["name"]} with {len(data["ids"])} songs')
+    app.logger.info(f"Recieved playlst {data['name']} with {len(data['ids'])} songs")
 
     try:
         # Fetch features from Pinecone
@@ -131,14 +131,14 @@ def rec():
             return jsonify({"error": "No songs found in database"}), 404
         
         #Log success
-        app.logger.info('features retrieved successully')
+        app.logger.info("features retrieved successully")
 
         # Preprocess and construct sequences
         name_embs, seq , targets= prep.preprocess_playlist(features, data["name"])
         # Predict features for each sequence
         results= rc.predict_playlist(model, seq, name_embs, targets)
         if results:
-            app.logger.info(f'Generated  {len(results['predictions'])} predictions')
+            app.logger.info(f"Generated  {len(results['predictions'])} predictions")
         # Fetch top k similar features for each prediction
         id_matches = get_recommendations(results["predictions"],index,data["ids"])
         # Map predictions to metadata
