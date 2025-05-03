@@ -9,6 +9,7 @@ import torch.nn.functional as F
 import matplotlib.pyplot as plt
 from pinecone import Pinecone, ServerlessSpec
 import torch.nn as nn
+from huggingface_hub import hf_hub_download
 
 
 # Defining RNN model with GRU and Soft Gating
@@ -43,25 +44,34 @@ class MusicRec(nn.Module):
 class Recommend:
 
 
-    def init_model(self,  model_path= "best_model.pth"):
+    def init_model(self, model_path="quantized_model.pth", from_hf=True):
         """
-        Initialize model and import weights from saved training weights
-        args:
-            model_path: path to saved training weights
-        returns:
-            Music Recommendation Model
+        Initialize model from local path or Hugging Face Hub.
+        
+        Args:
+            model_path: Local path or HF filename (if from_hf=True)
+            from_hf: If True, download from Hugging Face Hub first
         """
-        config=  {
+        config = {
             "batch_size": 128,
             "lr": 3e-4,
             "epochs": 10,
             "device": torch.device("cuda" if torch.cuda.is_available() else "cpu")
         }
-        model= MusicRec().to(config["device"])
-        model.load_state_dict(torch.load(model_path))
-        print(model)
+        
+        # Download from Hugging Face Hub if needed
+        if from_hf:
+            model_path = hf_hub_download(
+                repo_id="ThistleBristle/MusicRec",
+                filename=model_path,
+                cache_dir="models"  # Optional: organized storage
+            )
+        
+        # Original initialization logic
+        model = MusicRec().to(config["device"])
+        model.load_state_dict(torch.load(model_path, map_location=config["device"]))  # Note: map_location added
+        print(f"Model loaded from {'HF' if from_hf else 'local'}: {model_path}")
         return model
-
 
     def predict_playlist(self, model ,input_sequences, title_embs, targets):
         """
