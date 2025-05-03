@@ -32,7 +32,7 @@ prep= Preprocessor()
 from lib.recommend import Recommend
 rc= Recommend()
 # Load model weights
-model= rc.init_model("best_model.pth")
+model= rc.init_model()
 
 app = Flask(__name__)
 
