@@ -1,0 +1,6 @@
+# .renderignore
+*.ipynb          # Ignore Jupyter notebooks
+__pycache__/     # Ignore Python cache
+*.pth            # (Optional) If you host model weights elsewhere
+.DS_Store        # Mac metadata
+venv/            # Local virtual env
