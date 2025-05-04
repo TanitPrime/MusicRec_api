@@ -44,33 +44,42 @@ class MusicRec(nn.Module):
 class Recommend:
 
 
-    def init_model(self, model_path="best_model.pth", from_hf=True):
+    def init_model(self, model_path="compressed_model.pt", repo = "ThistleBristle/MusicRec"):
         """
-        Initialize model from local path or Hugging Face Hub.
-        
-        Args:
-            model_path: Local path or HF filename (if from_hf=True)
-            from_hf: If True, download from Hugging Face Hub first
+        Loads compressed model directly from Hugging Face Hub
+        args:
+            model_path: file name of model weights
+            repo: Link to HuggingFace repository [UserName]/[RepoName]
+        Returns:
+            MusicRec model object with loaded weights
         """
-        config = {
-            "batch_size": 128,
-            "lr": 3e-4,
-            "epochs": 10,
-            "device": torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        }
+        # Download model file
+        model_path = hf_hub_download(
+            repo_id=repo,
+            filename=model_path,
+            cache_dir="models"
+        )
         
-        # Download from Hugging Face Hub if needed
-        if from_hf:
-            model_path = hf_hub_download(
-                repo_id="ThistleBristle/MusicRec",
-                filename=model_path,
-                cache_dir="models"  # Optional: organized storage
-            )
+        # Load with seekable buffer
+        with open(model_path, 'rb') as f:
+            buffer = BytesIO(f.read())
         
-        # Original initialization logic
-        model = MusicRec().to(config["device"])
-        model.load_state_dict(torch.load(model_path, map_location=config["device"]))  # Note: map_location added
-        print(f"Model loaded from {'HF' if from_hf else 'local'}: {model_path}")
+        compressed = torch.load(buffer, map_location='cpu')
+        
+        # Rebuild model
+        model = MusicRec(
+            target_feature_count=compressed['config']['target_feature_count']
+        )
+        model.gru.hidden_size = compressed['config']['gru_hidden_size']
+        
+        # Load weights
+        for name, param in model.named_parameters():
+            if isinstance(compressed['state_dict'][name], dict):  # Compressed weights
+                quant = compressed['state_dict'][name]
+                param.data = quant['quantized'].float() * quant['scale']
+            else:
+                param.data = compressed['state_dict'][name]
+        
         return model
 
     def predict_playlist(self, model ,input_sequences, title_embs, targets):
