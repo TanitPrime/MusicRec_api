@@ -207,13 +207,12 @@ class Preprocessor:
         targets= []
         for i in range(len(features) - self.sequence_length):
             input_sequence = [song_features for song_features in features[i:i + self.sequence_length]]
-            sequence= np.array(input_sequence)
-            sequences.append(sequence)
+            sequences.append(input_sequence)
 
             target= features[i + self.sequence_length]
-            targets.append(np.array(target))
+            targets.append(target)
 
         print(f"{len(sequences)} sequences made from '{playlist_name}' playlist")
         return (torch.tensor(np.array([playlist_name_embs for _ in range(len(sequences))]), dtype=torch.float32),
-                torch.tensor(sequences, dtype=torch.float32),
-                torch.tensor(targets, dtype=torch.float32))
+                torch.tensor(np.array(sequences), dtype=torch.float32),
+                torch.tensor(np.array(targets), dtype=torch.float32))
